@@ -3,7 +3,6 @@ import ModalVideo from '../components/modal-video/ModalVideo';
 import html2canvas from 'html2canvas';
 import { fabric } from 'fabric';
 import { redDot } from '../utils/redDot';
-import Divider from '../components/common/Divider';
 
 function VideoPlayer() {
     const [videoURL, setVideoURL] = useState('');
@@ -12,10 +11,8 @@ function VideoPlayer() {
     const [playing, setPlaying] = useState(false);
     const [imgUrl, setImgUrl] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [objectFit, setObjectFit] = useState(false);
     const divRef = useRef(null);
     const videoRef = useRef(null);
-
 
     function handleVideoChange(event) {
         const file = event.target.files[0];
@@ -30,15 +27,30 @@ function VideoPlayer() {
 
     function handlePause(event) {
 
+        console.log("EVENT", event)
+
+
+        let video = event.target;
+        let segundoActual = video.currentTime;
+        console.log("El video se pausó en el segundo " + segundoActual.toFixed());
+        console.log("typeof " + typeof(segundoActual));
+
+
         setPlaying(false);
-        console.log('Video iniciado');
-        // let video = event.target;
-        // let segundoActual = video.currentTime;
-        // console.log("El video se pausó en el segundo " + segundoActual.toFixed());
-        // console.log("typeof " + typeof(segundoActual));
-        // setPlaying(false);
-        // console.log('Video pausado');
-        // handleCapture(event)
+        console.log('Video pausado');
+        handleCapture(event)
+    }
+
+    function outsideHandlePause(event) {
+        let video = event.target;
+        let segundoActual = video.currentTime;
+        console.log("El video se pausó en el segundo " + segundoActual.toFixed());
+        console.log("typeof " + typeof(segundoActual));
+
+
+        setPlaying(false);
+        console.log('Video pausado');
+        handleCapture(event)
     }
 
     const convertBase64 = (img) =>{
@@ -67,7 +79,7 @@ function VideoPlayer() {
                 const centerY = y;
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-                ctx.fillStyle = 'orange';
+                ctx.fillStyle = 'red';
                 ctx.fill();
                 const editedImageBase64 = canvas.toDataURL();
                 console.log("editedImageBase64", editedImageBase64)
@@ -80,28 +92,76 @@ function VideoPlayer() {
       
 
     const handleMainPlayer = async (e) =>{
-        setPlaying(!playing)
-        if(playing){
-            const divBounds = e.target.getBoundingClientRect();
-            const x = e.clientX - divBounds.left;
-            const y = e.clientY - divBounds.top;
-            console.log(`El usuario hizo clic en (${x}, ${y}) dentro del div superpuesto`);
-            const currentTime = videoRef.current.currentTime;
-            console.log(currentTime.toFixed())
-            console.log("videoRef", videoRef.current)
-            let base64img = await convertBase64(videoRef.current);
-            let redDotImg = redDot;
-            addCircleToImage(base64img, redDotImg, x, y)
-        }
+        const divBounds = e.target.getBoundingClientRect();
+        const x = e.clientX - divBounds.left;
+        const y = e.clientY - divBounds.top;
+        console.log(`El usuario hizo clic en (${x}, ${y}) dentro del div superpuesto`);
 
-        playing ? videoRef.current.pause() : videoRef.current.play();
+        const currentTime = videoRef.current.currentTime;
 
+        console.log(currentTime.toFixed())
+
+        console.log("videoRef", videoRef.current)
+        
+        ///const video = videoRef.current;
+        // const canvas = document.createElement("canvas");
+        // canvas.width = video.videoWidth;
+        // canvas.height = video.videoHeight;
+        // const ctx = canvas.getContext("2d");
+        // ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // const dataURL = canvas.toDataURL("image/png");
+
+        let base64img = await convertBase64(videoRef.current);
+        let redDotImg = redDot;
+
+
+        addCircleToImage(base64img, redDotImg, x, y)
+
+
+        
+        //setImgUrl(base64img)
+
+        // console.log("test", test)
+
+        // setImgUrl(test);
+        //setModalOpen(true);
+        
+
+        // handleCapture(videoRef);
+        // if(videoURL){
+        //     playing ? handlePause() : handlePlay();
+        // }else{
+        //     console.log("falta cargar el video")
+        // }
     }
 
     function handleCapture(e) {
+        // console.log("canvas", e)
+
         html2canvas(e.target).then((canvas) => {
             const imgData = canvas.toDataURL();
             setImgUrl(imgData);
+            // const img = new Image();
+            // img.onload = () => {
+            //     const canvas = new fabric.Canvas('canvas');
+            //     const fabricImg = new fabric.Image(img);
+            //     canvas.setWidth(img.width);
+            //     canvas.setHeight(img.height);
+            //     canvas.setBackgroundImage(fabricImg);
+            //     canvas.on('mouse:down', (e) => {
+            //         const circle = new fabric.Circle({
+            //             radius: 10,
+            //             fill: 'red',
+            //             left: e.pointer.x,
+            //             top: e.pointer.y,
+            //             originX: 'center',
+            //             originY: 'center',
+            //         });
+            //         canvas.add(circle);
+            //         canvas.renderAll();
+            //     });
+            // };
+            // img.src = imgData;
         });
 
         setModalOpen(true);
@@ -133,29 +193,19 @@ function VideoPlayer() {
 
     return (
         <div>
-            {/* <button onClick={()=>{console.log(objectFit)}}>test</button> */}
+            {/* <button onClick={()=>{console.log(videoRef.current.videoHeight)}}>test</button> */}
             <canvas id="my-canvas" style={{ display: 'none' }}></canvas>
             {/* <canvas id="my-canvas" ></canvas> */}
-            <Divider/>
-                <div style={{width: "100%", display: "flex", flexDirection: "row"}}>
-                    <button type="button" className="btn btn-primary btn-sm" style={{width: "15%"}}>Comentarios</button>
-                    <h5 style={{textAlign: "center", width: "70%"}}>Video Scanner</h5>
-                    <div style={{width: "15%", display: "flex", alignItems: "center", justifyContent: "flex-end"}}>
-                        <div className="form-check form-switch">
-                            <input onClick={()=>{setObjectFit(!objectFit)}} className="form-check-input" type="checkbox" id="flexSwitchCheckDefault"/>
-                            <label class="form-check-label" for="flexSwitchCheckDefault">Object Fit: Cover</label>
-                        </div>
-                    </div>
-                </div>
-            <Divider/>
+
+
             <input type="file" accept="video/*" onChange={handleVideoChange} />
             <div 
                 ref={divRef} 
-                style={{width: "100%", minHeight: "720px", border: "1px solid black", backgroundColor: "black", position: "relative"}}
+                style={{width: "100%", maxHeight: "720px", border: "2px solid red", backgroundColor: "black", position: "relative"}}
             >
-                <div onClick={handleMainPlayer} style={{height: "670px", width: "100%", border: "0px solid green", position: "absolute", zIndex: 1000}}></div>
+                <div onClick={handleMainPlayer} style={{height: "680px", width: "100%", border: "5px solid green", position: "absolute"}}></div>
                 <video 
-                    style={objectFit ? {objectFit: "cover"} : null}
+                    // style={{objectFit: "cover"}}
                     src={videoURL} 
                     ref={videoRef}
                     width={width} 
